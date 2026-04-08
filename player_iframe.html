@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="origin">
+    <title>PLAYER - selcukobs1</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* video {
+            object-fit: fill !important;
+        } */
+
+        #player-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 0;
+            background: #000;
+        }
+
+        .control-button {
+            position: fixed;
+            z-index: 9999;
+            cursor: pointer;
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+
+
+        [data-advertisement] {
+            bottom: 25%;
+            position: absolute;
+            right: 0;
+            z-index: 9999;
+        }
+
+        [data-advertisement] button {
+            background-color: #000;
+            border: 3px solid #333;
+            border-right: 0;
+            color: #f8f8f8;
+            font-family: "Roboto";
+            font-weight: bold;
+            font-size: 68%;
+            padding: 10px 20px;
+        }
+
+        [data-advertisement-link] {
+            height: 100%;
+            left: 0;
+            position: absolute;
+            top: 0;
+            z-index: 9998;
+            width: 100%;
+        }
+
+        [data-free-banner] {
+            position: absolute;
+            left: 50%;
+            bottom: 15px;
+            transform: translateX(-50%);
+            width: 50%;
+            z-index: 99999;
+            text-align: center;
+        }
+
+        [data-free-banner] img {
+            width: 100%;
+            max-width: 468px;
+        }
+
+        [data-f-cl] {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        [data-free-close] {
+            color: #fff;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .fullscreen [data-free-banner] img {
+            max-width: 50%;
+        }
+
+        [data-hd-indicator] {
+            display: block !important;
+        }
+
+        [data-text-overlay] {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 10px 20px !important;
+            border-radius: 5px;
+            text-align: center;
+            min-width: 300px;
+            display: none;
+        }
+
+        [data-text-overlay] [data-text-link] {
+            color: #fff;
+            text-decoration: none;
+            font-family: "Roboto", sans-serif;
+            font-size: 12px;
+            font-weight: bold;
+            display: block;
+        }
+
+        [data-text-overlay] [data-text-link]:hover {
+            color: #f0f0f0;
+            text-decoration: underline;
+        }
+
+        [data-text-close] {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        [data-text-close]:hover {
+            color: #ff0000;
+        }
+
+        [data-overlay-banner] {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 99998;
+            background-color: rgba(0, 0, 0, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            max-width: 600px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+        }
+
+        [data-banner-grid] {
+            display: grid;
+            gap: 12px;
+            width: 100%;
+        }
+
+        [data-banner-grid].grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        [data-banner-grid].grid-4 {
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+        }
+
+        [data-banner-item] {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            background: #1a1a1a;
+            border: 2px solid transparent;
+        }
+
+        [data-banner-item]:hover {
+            transform: scale(1.08);
+            border-color: #ff6b6b;
+            box-shadow: 0 5px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        [data-banner-item] a {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        [data-banner-item] img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border-radius: 6px;
+        }
+
+        [data-overlay-close] {
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff0000 100%);
+            color: #fff;
+            border: 3px solid #000;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+            transition: all 0.3s ease;
+        }
+
+        [data-overlay-close]:hover {
+            background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+            transform: scale(1.15) rotate(90deg);
+        }
+
+        [data-banner-title] {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            font-family: 'Roboto', sans-serif;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            [data-overlay-banner] {
+                max-width: 95%;
+                padding: 20px;
+            }
+
+            [data-banner-grid].grid-4 {
+                gap: 8px;
+            }
+
+            [data-overlay-close] {
+                width: 35px;
+                height: 35px;
+                font-size: 20px;
+            }
+
+            [data-text-overlay] {
+                top: 68px;
+            }
+        }
+
+        .clappr-watermark {
+            left: 20px !important;
+        }
+
+        .clappr-watermark[data-watermark] {
+            width: 17% !important;
+        }
+
+        [data-watermark-link] {
+            position: absolute;
+            z-index: 9999;
+            cursor: pointer;
+        }
+
+        [data-watermark-link]:hover {
+            opacity: 0.8;
+        }
+
+        .media-control[data-media-control] .media-control-layer[data-controls] button.media-control-button[data-hd-indicator] {
+            opacity: 1 !important;
+        }
+
+        .media-control[data-media-control] .media-control-icon {
+            opacity: 0.8 !important;
+        }
+    </style>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-C3JCQSD4S1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-C3JCQSD4S1');
+    </script>
+</head>
+
+<body>
+    <div id="player-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@clappr/player@0.11.0/dist/clappr.min.js"></script>
+    <script charset="UTF-8" src="https://cdn.jsdelivr.net/npm/level-selector/dist/level-selector.min.js"></script>
+    <script src="./p2p-engine.min.js"></script>
+    <script src="./sproc.js"></script>
+    <script>
+        let wasmProcessor = null;
+        let wasmReady = false;
+
+        (async () => {
+            try {
+                await wasm_bindgen("./sproc_bg.wasm");
+                wasmProcessor = wasm_bindgen.process_data;
+                wasmReady = true;
+            } catch (e) {
+                console.error("WASM ERROR:", e);
+            }
+        })();
+    </script>
+    <script>
+        class CustomFragmentLoader extends Hls.DefaultConfig.loader {
+            constructor(config) {
+                super(config);
+                var load = this.load.bind(this);
+                this.load = function(context, config, callbacks) {
+                    var onSuccess = callbacks.onSuccess;
+                    callbacks.onSuccess = function(response, stats, context) {
+                        if (response.url && (response.url.includes(atob("dGlrdG9rY2RuLmNvbQ==")) || response.url.includes(atob("aWJ5dGVpbWcuY29t")))) {
+                            if (wasmReady && wasmProcessor) {
+                                try {
+                                    const pngBuffer = new Uint8Array(response.data);
+                                    const tsData = wasmProcessor(pngBuffer);
+
+                                    if (tsData && tsData.length > 0) {
+                                        response.data = tsData.buffer.slice(0);
+                                    }
+                                } catch (e) {
+                                    console.error("Decode Error:", e);
+                                }
+                            }
+                        }
+                        onSuccess(response, stats, context);
+                    };
+                    load(context, config, callbacks);
+                };
+            }
+        }
+
+        class StreamPlayer {
+            constructor() {
+                this.baseStreamUrl = 'https://dga1op10s1u3leo.6c2c54919ddfa1.click/live/';
+                this.adsBaseUrl = 'https://dga1op10s1u3leo.6c2c54919ddfa1.click/live/';
+
+                const hashParams = this.parseHashParams(window.location.hash);
+                this.urlConfig = {
+                    poster: decodeURIComponent(hashParams.poster || ''),
+                    watermark: decodeURIComponent(hashParams.watermark || ''),
+                    watermarkLink: decodeURIComponent(hashParams.watermarkLink || ''),
+                    watermarkPosition: decodeURIComponent(hashParams.watermarkPosition || 'bottom-left'),
+                    reklamResim: decodeURIComponent(hashParams.reklamResim || ''),
+                    reklamGidis: decodeURIComponent(hashParams.reklamGidis || '')
+                };
+
+                this.config = {
+                    stream: {
+                        baseUrl: this.baseStreamUrl,
+                        defaultSource: null
+                    },
+                    ads: {
+                        enabled: true,
+                        skipOffset: 6,
+                        providers: this.decodeAdsConfig("eyJeaHR0cHM/Oi8vKHd3dy4pP3NlbGN1a3Nwb3J0c2hkXFx3Ki54eXouKiI6eyJlbmFibGVkIjp0cnVlLCJsaW5rIjoiaHR0cHM6Ly9zaG9ydGJhbC5vbmxpbmUvc2VsY3Vrc3BvcnRoZCIsInNvdXJjZSI6Imh0dHBzOi8vY2RuLmpzZGVsaXZyLm5ldC9naC9tYXJyaWVkaW5mL2dwQG1hc3Rlci85ODU1ZmRkNzJlMDE3OTBmNGY0MWFhZWYudHh0In0sIl5odHRwcz86Ly8od3d3Lik/eHl6c3BvcnRzLVxcdyoueHl6LioiOnsiZW5hYmxlZCI6dHJ1ZSwibGluayI6Imh0dHBzOi8vc2hvcnRiYWwub25saW5lL3NlbGN1a3Nwb3J0aGQiLCJzb3VyY2UiOiJodHRwczovL2Nkbi5qc2RlbGl2ci5uZXQvZ2gvbWFycmllZGluZi9ncEBtYXN0ZXIvOTg1NWZkZDcyZTAxNzkwZjRmNDFhYWVmLnR4dCJ9LCJeaHR0cHM/Oi8vKHd3dy4pP3Nwb3JjYWZlLVxcdyoueHl6LioiOnsiZW5hYmxlZCI6dHJ1ZSwibGluayI6Imh0dHBzOi8vdDJtLmlvL2JwdWFuc3MiLCJzb3VyY2UiOiJodHRwczovL2Nkbi5qc2RlbGl2ci5uZXQvZ2gvbWFycmllZGluZi9icEBtYXN0ZXIvMjQwOWQ0YWRmNmNkZjY1NTU2NDMxMDBjLnR4dCJ9LCJeaHR0cHM/Oi8vKHd3dy4pP3hzcG9ydHYtXFx3Ki54eXouKiI6eyJlbmFibGVkIjp0cnVlLCJsaW5rIjoiaHR0cHM6Ly90Mm0uaW8vWHNwb3J0diIsInNvdXJjZSI6Imh0dHBzOi8vY2RuLmpzZGVsaXZyLm5ldC9naC9tYXJyaWVkaW5mL2JwQG1hc3Rlci8yNDA5ZDRhZGY2Y2RmNjU1NTY0MzEwMGMudHh0In0sIl5odHRwcz86Ly8od3d3Lik/d2Vic3Bvci1cXHcqLnh5ei4qIjp7ImVuYWJsZWQiOmZhbHNlLCJsaW5rIjoiaHR0cHM6Ly90Lmx5L3NlbGN1a2NhZmVtZXJpdCIsInNvdXJjZSI6Imh0dHBzOi8vdmlkZW8udHdpbWcuY29tL2FtcGxpZnlfdmlkZW8vMTk0OTIyMzI5MTAzNTUxMjgzMi9wbC8zRDNKTXJKUEZZRVAwNlIxLm0zdTg/dmFyaWFudF92ZXJzaW9uPTEmdGFnPTIxIn19")
+                    },
+                    text: {
+                        data: this.decodeAdsConfig("ewogICJeaHR0cHM/Oi8vKHd3d1xcLik/c3BvcmNhZmUtXFx3KlxcLnh5ei4qIjogewogICAgInRlbXBsYXRlIjogIkNBU0lOT1JPWUFMJTI3REUlMkIlN0JDQU1QQUlHTiU3RCUyQlNFTkRFJTJCS0FUSUwlMjEiLAogICAgImludGVydmFsIjogMTUwMDAsCiAgICAiY2FtcGFpZ25zIjogWwogICAgICB7CiAgICAgICAgImxhYmVsIjogIiVDNCVCMExLK0RFTkVNRU5FKyUyMDI1MDAlRTIlODIlQkErQk9OVVMiLAogICAgICAgICJsaW5rIjogImh0dHBzOi8vdDJtLmlvL3JveWFsZmFjZSIKICAgICAgfQogICAgXQogIH0KfQ==")
+                    },
+                    banner: {
+                        enabled: true,
+                        image: this.urlConfig.reklamResim,
+                        link: this.urlConfig.reklamGidis
+                    },
+                    overlayBanner: {
+                        providers: this.decodeAdsConfig("ewogICAgIl5odHRwcz86Ly8od3d3Lik/c3BvcmNhZmUtXFx3Ki54eXouKiI6IHsKICAgICAgICAiZW5hYmxlZCI6IHRydWUsCiAgICAgICAgImxheW91dCI6ICI0IiwKICAgICAgICAiYXV0b0Nsb3NlIjogMTAwMDAsCiAgICAgICAgImNvb2tpZUV4cGlyeSI6IDI0LAogICAgICAgICJ0aXRsZSI6ICIlRjAlOUYlOEUlODElMjAlQzMlOTZ6ZWwlMjBUZWtsaWZsZXJpbWl6JTIwJUYwJTlGJThFJTgxIiwKICAgICAgICAiYmFubmVycyI6IFsKICAgICAgICAgICAgewogICAgICAgICAgICAgICAgImltYWdlIjogImh0dHBzOi8vYmxvZ2dlci5nb29nbGV1c2VyY29udGVudC5jb20vaW1nL2IvUjI5dloyeGwvQVZ2WHNFaTRxWEp5eUxjaUJLVnZNek50LU5qY3c4TGNaMk9YUGY2LVlOeTBEZHh3RkM1Q0ZoenN4NUI2WndiYVh5bHVoUV8ybHI5TVQ0UlVxNkZ1NzlOMktVVk51Sm1rb21PM2I2QzgtTlkyNVF3Vm9VTWt1SFVQcWNiTVVfeXF6SG1zM3JxbUVCeE1CbzhDNVFCTlFOX0RFTXhfRzNsNDVseTFuMHhvTGhjVndqaUlsQnZOTXExR3VxTnFDR2xNWHJjL3MxNjAwMC9ibmtidHBtbi5naWYiLAogICAgICAgICAgICAgICAgImxpbmsiOiAiaHR0cHM6Ly9jdXR0Lmx5L1RySXdvYjNxIgogICAgICAgICAgICB9LAogICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAiaW1hZ2UiOiAiaHR0cHM6Ly9ibG9nZ2VyLmdvb2dsZXVzZXJjb250ZW50LmNvbS9pbWcvYi9SMjl2WjJ4bC9BVnZYc0VpdlNHZlJlWUp0X25JcFFGZEpSVFJvb0NGR1ZCMklPUlJZYmxVaXlmQnR3TGN4TEZvYTRGaHg0b1hDa0pkZ1EyTnNqLUNhakFCT3hBdlE2NnpiNGI2MkFKWlBCM1FqcElLeHhJeHdLOTNKbkx1S1lSM2MxR2FMd3o4aW1QRGcxQ0E2N3pyaEtyTHBLSzN4cFJHZ00xekwxd2F3cGhaVHc4T0l6UjZxbFZ1eEpFZXkwSTVSZVMzT2Jqa1ppdXcvczE2MDAwL2Joc2NtcG1uLmdpZiIsCiAgICAgICAgICAgICAgICAibGluayI6ICJodHRwczovL2N1dHQubHkvYXJJd3M0U00iCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJpbWFnZSI6ICJodHRwczovL2Jsb2dnZXIuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2ltZy9iL1IyOXZaMnhsL0FWdlhzRWhLQUxPYWplUHFTNWNPb3JUbFlqeFdrVGhPUzNPZDdGZnVzQm52clhVRmljT0dNaUlyYmxQd21kS3NKZEl2Nkt3Y1h6MWhlb0xTRlFHVzRWb2RkWGdTSXU0OXNpRzJvMndPN3VBRF93SHBmSHRDYUx5WFI4N2dxYlhUNDM2VnJ3aHdZYjdULWtMcWxIbms3MXJtNmRqQUU5VE5uaVpTUTZXNDdoT0xIak1taVMtZDhwVVdGcU5KX0VMRXBtYy9zMTYwMDAvYnR3bnBtbi5naWYiLAogICAgICAgICAgICAgICAgImxpbmsiOiAiaHR0cHM6Ly9jdXR0Lmx5L3JySXdzbFo3IgogICAgICAgICAgICB9LAogICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAiaW1hZ2UiOiAiaHR0cHM6Ly9ibG9nZ2VyLmdvb2dsZXVzZXJjb250ZW50LmNvbS9pbWcvYi9SMjl2WjJ4bC9BVnZYc0VnNVA5RWltZnYweWFlbEd6NmdnWDR2RXJWaTdyQ3pyanFzNUNLYmVjaTh2LWNoMTVRcExaaG5tbVZJUHNOZHhOckdQWnI1ZzVXVXpwRDRSc1hyZ2ZrNmMyVi1VdlBkSW8wOWtxRFo2cWktcHZkcHU3Q2k0bFdDN0lfT1lBczhrMmsxTThNNVdZZG5sZl9xX1R2bm9ENzZuaWR3NUFid1RXZlhaMFpHX254ZGM1RjAzaDhHUFJyT1hfMEtPVWcvczMyMC9tcm9idHBtbi5naWYiLAogICAgICAgICAgICAgICAgImxpbmsiOiAiaHR0cHM6Ly9jdXR0Lmx5L2FySXdzT3pzIgogICAgICAgICAgICB9CiAgICAgICAgXQogICAgfSwKICAgICJeaHR0cHM/Oi8vKHd3dy4pP2Fub3RoZXJzaXRlXFx3Ki5jb20uKiI6IHsKICAgICAgICAiZW5hYmxlZCI6IHRydWUsCiAgICAgICAgImxheW91dCI6ICIyIiwKICAgICAgICAiYXV0b0Nsb3NlIjogMTAwMDAsCiAgICAgICAgImNvb2tpZUV4cGlyeSI6IDEyLAogICAgICAgICJ0aXRsZSI6ICLwn5KOIDInbGkgw5Z6ZWwgS2FtcGFueWEiLAogICAgICAgICJiYW5uZXJzIjogWwogICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAiaW1hZ2UiOiAiaHR0cHM6Ly9wbGFjZWhvbGQuY28vNDAweDI1MC85QjU5QjYvRkZGRkZGP3RleHQ9S2FtcGFueWErMSIsCiAgICAgICAgICAgICAgICAibGluayI6ICJodHRwczovL2Fub3RoZXJzaXRlLmNvbS9wcm9tbzEiCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJpbWFnZSI6ICJodHRwczovL3BsYWNlaG9sZC5jby80MDB4MjUwL0U3NEMzQy9GRkZGRkY/dGV4dD1LYW1wYW55YSsyIiwKICAgICAgICAgICAgICAgICJsaW5rIjogImh0dHBzOi8vYW5vdGhlcnNpdGUuY29tL3Byb21vMiIKICAgICAgICAgICAgfQogICAgICAgIF0KICAgIH0KfQ==")
+                    }
+                };
+
+                this.config.stream.defaultSource = this.getStreamSource();
+                this.skipTimer = null;
+                this.skipOffset = this.config.ads.skipOffset;
+                this.elapsedTime = 0;
+                this.adSkipped = false;
+                this.bannerInitialized = false;
+                this.textOverlayInitialized = false;
+                this.overlayBannerInitialized = false;
+                this.textRotationIntervalId = null;
+                this.p2pEngine = null;
+                this.p2pInitialized = false;
+
+                this.initPlayer();
+                this.initTracking();
+                this.player.attachTo(document.getElementById('player-container'));
+            }
+
+            decodeAdsConfig(encodedConfig) {
+                return JSON.parse(window.atob(encodedConfig));
+            }
+
+            static setCookie(name, value, hours) {
+                const date = new Date();
+                date.setTime(date.getTime() + (hours * 60 * 60 * 1000));
+                document.cookie = `${name}=${value};expires=${date.toUTCString()};path=/`;
+            }
+
+            static getCookie(name) {
+                return document.cookie.split('; ')
+                    .find(row => row.startsWith(`${name}=`))
+                    ?.split('=')[1];
+            }
+
+            initPlayer() {
+                this.player = new Clappr.Player({
+                    autoPlay: true,
+                    disableVideoTagContextMenu: true,
+                    height: '100%',
+                    width: '100%',
+                    poster: this.urlConfig.poster,
+                    position: 'bottom-left',
+                    chromeless: Clappr.Browser.isiOS,
+                    playback: {
+                        playInline: true,
+                        controls: Clappr.Browser.isiOS,
+                        crossOrigin: 'anonymous',
+                        hlsjsConfig: {
+                            xhrSetup: function(xhr, url) {
+                                xhr.withCredentials = false;
+                            },
+                            fLoader: CustomFragmentLoader,
+                            loader: CustomFragmentLoader,
+                            pLoader: CustomFragmentLoader,
+                            liveSyncDurationCount: 3,
+                            maxMaxBufferLength: 30,
+                            levelLoadingMaxRetry: 5,
+                            levelLoadingTimeOut: 2000,
+                            levelLoadingRetryDelay: 800,
+                            manifestLoadingMaxRetry: 5,
+                            manifestLoadingTimeOut: 2000,
+                            manifestLoadingRetryDelay: 800,
+                            fragLoadingTimeOut: 15000,
+                            fragLoadingRetryDelay: 1500,
+                            fragLoadingMaxRetry: 6,
+                            liveMaxLatencyDurationCount: 5
+                        }
+                    },
+                    disableErrorScreen: true,
+                    plugins: [LevelSelector],
+                    language: 'tr',
+                    mediacontrol: {
+                        "seekbar": "#49c7dc"
+                    },
+                    mimeType: 'application/vnd.apple.mpegurl',
+                    strings: {
+                        tr: {
+                            "live": "canlı yayın",
+                            "default_error_message": "Yayında sorun var.",
+                            "default_error_title": "Dikkat!",
+                            "playback_not_supported": "Tarayıcınız bu videoyu oynatma desteğine sahip değil. Lütfen diğer bir tarayıcı deneyiniz."
+                        }
+                    }
+                });
+                this.setupPlayerEvents();
+            }
+
+            parseHashParams(hash) {
+                if (!hash || hash === '#') return {};
+
+                const params = {};
+                const hashString = hash.substring(1);
+
+                hashString.split('&').forEach(param => {
+                    const [key, value] = param.split('=');
+                    if (key && value) {
+                        params[key] = value;
+                    }
+                });
+
+                return params;
+            }
+
+            getStreamSource() {
+                const privateStream = 0;
+                const urlParams = new URLSearchParams(window.location.search);
+                let streamId = urlParams.get('id') || 'selcukbeinsports1';
+                if (false) {
+                    streamId = "selcukobs1";
+                }
+                if (privateStream) {
+                    return this.baseStreamUrl;
+                }
+                if (navigator.userAgent.match(/iPad|iPhone|iPod/)) {
+                    return `${this.baseStreamUrl}${streamId}/ios/playlist.m3u8`;
+                }
+                return `${this.baseStreamUrl}${streamId}/playlist.m3u8`;
+            }
+
+            setupPlayerEvents() {
+                this.player.on(Clappr.Events.PLAYER_READY, () => {
+                    let adSource = this.selectAdSource();
+                    if (!adSource.includes('://')) {
+                        adSource = `${this.adsBaseUrl}${adSource}`;
+                    }
+                    const shouldPlayAd = this.config.ads.enabled && !this.adSkipped && adSource !== this.config.stream.defaultSource;
+
+                    if (shouldPlayAd) {
+                        this.player.configure({
+                            source: adSource
+                        });
+                        this.initSkipButton();
+
+                        this.player.core.activePlayback.on(Clappr.Events.PLAYBACK_ENDED, () => {
+                            this.skipAd();
+                        });
+
+                        this.player.core.activePlayback.on(Clappr.Events.PLAYBACK_ERROR, () => {
+                            this.skipAd();
+                        });
+                    } else {
+                        this.player.configure({
+                            source: this.config.stream.defaultSource,
+                            watermark: this.urlConfig.watermark,
+                            watermarkLink: this.urlConfig.watermarkLink,
+                            position: this.urlConfig.watermarkPosition
+                        });
+                        this.tryInitP2P();
+                        if (!this.bannerInitialized) {
+                            this.initBanner();
+                            this.bannerInitialized = true;
+                        }
+                        if (!this.textOverlayInitialized) {
+                            this.initTextOverlay();
+                            this.textOverlayInitialized = true;
+                        }
+                        if (!this.overlayBannerInitialized) {
+                            this.initOverlayBanner();
+                            this.overlayBannerInitialized = true;
+                        }
+                        this.player.core.activePlayback.on(Clappr.Events.PLAYBACK_ERROR, () => {
+                            this.handlePlaybackError();
+                        });
+                        $('.clappr-watermark a').removeAttr("target").removeAttr("href").css("cursor", "initial");
+                    }
+                });
+
+                this.player.on(Clappr.Events.PLAYER_ERROR, () => {
+                    this.handlePlaybackError();
+                });
+            }
+
+            selectAdSource() {
+                const referrer = document.referrer.length ? document.referrer : "https://" + this.parseHashParams(window.location.hash).referrer;
+                const provider = Object.entries(this.config.ads.providers).find(([pattern]) => {
+                    const result = new RegExp(pattern).test(referrer);
+                    console.log("pattern :", pattern, "referrer: ", referrer);
+                    return result;
+                });
+                this.config.ads.enabled = provider?.[1].enabled;
+
+                return provider?.[1].source || this.config.stream.defaultSource;
+            }
+
+            initControls() {}
+
+            initTracking() {
+
+            }
+
+            handlePlaybackError() {
+                console.error('Playback error detected');
+                // setTimeout(() => location.reload(), 5000);
+            }
+
+            initSkipButton() {
+                const skipButton = $('<div data-advertisement />');
+                const skipText = $('<button type="button" />').text(`REKLAMI GEÇMEK İÇİN ${this.skipOffset} SANİYE KALDI`);
+                skipButton.append(skipText);
+
+                const adLink = $('<div data-advertisement-link />');
+                const link = $('<a />').attr({
+                    href: Object.entries(this.config.ads.providers).find(([pattern]) =>
+                        new RegExp(pattern).test(document.referrer)
+                    )?.[1]?.link || '#',
+                    target: '_blank'
+                }).css({
+                    display: 'inline-block',
+                    height: '100%',
+                    width: '100%',
+                    pointerEvents: 'none'
+                });
+                adLink.append(link);
+
+                skipButton.hide();
+                adLink.hide();
+                $('body').prepend(skipButton, adLink);
+
+                this.player.core.activePlayback.once(Clappr.Events.PLAYBACK_PLAY, () => {
+                    skipButton.show();
+                    adLink.show();
+                    link.css('pointerEvents', 'auto');
+
+                    this.skipTimer = setInterval(() => {
+                        this.elapsedTime++;
+                        if (this.elapsedTime >= this.skipOffset) {
+                            skipText.text('REKLAMI GEÇ').css('cursor', 'pointer');
+                            skipText.on('click', () => this.skipAd());
+                            clearInterval(this.skipTimer);
+                        } else {
+                            skipText.text(`REKLAMI GEÇMEK İÇİN ${this.skipOffset - this.elapsedTime} SANİYE KALDI`);
+                        }
+                    }, 1000);
+                });
+            }
+
+            skipAd() {
+                $('[data-advertisement], [data-advertisement-link]').remove();
+                this.adSkipped = true;
+                this.player.configure({
+                    source: this.config.stream.defaultSource,
+                    watermark: this.urlConfig.watermark,
+                    watermarkLink: this.urlConfig.watermarkLink,
+                    position: this.urlConfig.watermarkPosition
+                });
+                this.tryInitP2P();
+
+                if (!this.bannerInitialized) {
+                    this.initBanner();
+                    this.bannerInitialized = true;
+                }
+                if (!this.textOverlayInitialized) {
+                    this.initTextOverlay();
+                    this.textOverlayInitialized = true;
+                }
+                if (!this.overlayBannerInitialized) {
+                    this.initOverlayBanner();
+                    this.overlayBannerInitialized = true;
+                }
+            }
+
+            initBanner() {
+                if (!this.config.banner.enabled) return;
+
+                if (!this.config.banner.image || !this.config.banner.link) return;
+
+                const bannerHtml = `
+                    <div data-free-banner>
+                        <div data-f-cl>
+                            <a data-free-close href="javascript:void(0)">&times;</a>
+                        </div>
+                        <a href="${this.config.banner.link}" target="_blank">
+                            <img src="${this.config.banner.image}" alt="">
+                        </a>
+                    </div>
+                `;
+
+                $('#player-container .container').prepend(bannerHtml);
+
+                $('[data-free-close]').on('click', (e) => {
+                    e.preventDefault();
+                    $('[data-free-banner]').hide();
+                    return false;
+                });
+            }
+
+            initTextOverlay() {
+                const referrer = document.referrer;
+                const entry = Object.entries(this.config.text.data).find(([pattern]) => {
+                    return new RegExp(pattern).test(referrer);
+                });
+
+                if (!entry) {
+                    return;
+                }
+
+                const providerConfig = entry[1] || {};
+
+                $(document).off('click.textOverlayClose').on('click.textOverlayClose', '[data-text-close]', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    $('[data-text-overlay]').hide();
+                    return false;
+                });
+
+                const isNewFormat = providerConfig.template && Array.isArray(providerConfig.campaigns);
+                if (isNewFormat) {
+                    const template = decodeURIComponent(providerConfig.template).replaceAll('+', ' ');
+                    const interval = Number(providerConfig.interval) || 15000;
+                    const campaigns = (providerConfig.campaigns || [])
+                        .map(c => {
+                            const rawLabel = c.label || c.text || '';
+                            const label = decodeURIComponent(rawLabel).replaceAll('+', ' ');
+                            const link = c.link || '#';
+                            return {
+                                label,
+                                link
+                            };
+                        })
+                        .filter(c => c.label && c.link);
+
+                    if (!campaigns.length) return;
+
+                    const initialText = template.includes('{CAMPAIGN}') ?
+                        template.replace('{CAMPAIGN}', campaigns[0].label) :
+                        `${template} ${campaigns[0].label}`;
+
+                    if (!$('[data-text-overlay]').length) {
+                        const textOverlayHtml = `
+                            <div data-text-overlay>
+                                <a data-text-link href="${campaigns[0].link}" target="_blank">${initialText}</a>
+                                <a data-text-close href="javascript:void(0)">&times;</a>
+                            </div>
+                        `;
+                        $('#player-container .container').prepend(textOverlayHtml);
+                    } else {
+                        $('[data-text-overlay] [data-text-link]')
+                            .attr('href', campaigns[0].link)
+                            .text(initialText);
+                    }
+
+                    if (this.textRotationIntervalId) {
+                        clearInterval(this.textRotationIntervalId);
+                        this.textRotationIntervalId = null;
+                    }
+
+                    let index = 0;
+                    this.textRotationIntervalId = setInterval(() => {
+                        index = (index + 1) % campaigns.length;
+                        const nextText = template.includes('{CAMPAIGN}') ?
+                            template.replace('{CAMPAIGN}', campaigns[index].label) :
+                            `${template} ${campaigns[index].label}`;
+                        $('[data-text-overlay] [data-text-link]')
+                            .attr('href', campaigns[index].link)
+                            .text(nextText);
+                    }, interval);
+
+                    return;
+                }
+
+                if (!providerConfig.text || !providerConfig.link) {
+                    return;
+                }
+
+                const legacyText = decodeURIComponent(providerConfig.text).replaceAll('+', ' ');
+                const legacyLink = providerConfig.link;
+                const textOverlayHtml = `
+                    <div data-text-overlay>
+                        <a data-text-link href="${legacyLink}" target="_blank">${legacyText}</a>
+                        <a data-text-close href="javascript:void(0)">&times;</a>
+                    </div>
+                `;
+
+                $('#player-container .container').prepend(textOverlayHtml);
+            }
+
+            initOverlayBanner() {
+                const referrer = document.referrer;
+                const provider = Object.entries(this.config.overlayBanner.providers).find(([pattern]) => {
+                    return new RegExp(pattern).test(referrer);
+                });
+
+                if (!provider || !provider[1].enabled) {
+                    return;
+                }
+
+                if (StreamPlayer.getCookie('overlay_banner_closed')) {
+                    return;
+                }
+
+                const config = provider[1];
+                const banners = config.banners;
+                const layout = config.layout || '4';
+                const title = config.title || '';
+
+                if (!banners || banners.length === 0) {
+                    return;
+                }
+
+                let displayBanners = [];
+                if (layout === '2') {
+                    displayBanners = banners.slice(0, 2);
+                } else if (layout === '4') {
+                    displayBanners = banners.slice(0, 4);
+                } else {
+                    displayBanners = banners;
+                }
+
+                const gridClass = layout === '2' ? 'grid-2' : 'grid-4';
+
+                const titleHtml = title ? `<div data-banner-title>${decodeURIComponent(title).replaceAll('+', ' ')}</div>` : '';
+
+                let bannersHtml = '';
+                displayBanners.sort(() => Math.random() - 0.5);
+                displayBanners.forEach((banner, index) => {
+                    bannersHtml += `
+    <div data-banner-item>
+        <a href="${banner.link}" target="_blank">
+            <img src="${banner.image}" alt="Banner ${index + 1}">
+        </a>
+    </div>
+`;
+                });
+
+                const bannerHtml = `
+<div data-overlay-banner>
+    <button data-overlay-close>&times;</button>
+    ${titleHtml}
+    <div data-banner-grid class="${gridClass}">
+        ${bannersHtml}
+    </div>
+</div>
+`;
+
+                $('#player-container .container').prepend(bannerHtml);
+
+                $('[data-overlay-close]').on('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    $('[data-overlay-banner]').fadeOut(300, function() {
+                        $(this).remove();
+                    });
+                    $('[data-text-overlay]').show();
+                    // const cookieExpiry = config.cookieExpiry || 24;
+                    // StreamPlayer.setCookie('overlay_banner_closed', 'true', cookieExpiry);
+                    return false;
+                });
+
+                // Otomatik kapatma
+                // const autoClose = config.autoClose;
+                // if (autoClose && autoClose > 0) {
+                //     setTimeout(() => {
+                //         if ($('[data-overlay-banner]').length) {
+                //             $('[data-overlay-banner]').fadeOut(300, function () {
+                //                 $(this).remove();
+                //             });
+                //         }
+                //     }, autoClose);
+                // }
+            }
+
+            tryInitP2P() {
+                if (this.p2pInitialized || typeof window.P2PEngineHls === 'undefined') {
+                    return;
+                }
+                const playback = this.player && this.player.core && this.player.core.getCurrentPlayback && this.player.core.getCurrentPlayback();
+                const hls = playback && playback._hls;
+                if (!hls) {
+                    setTimeout(() => this.tryInitP2P(), 300);
+                    return;
+                }
+                const p2pConfig = {
+                    live: true,
+                    trackerZone: 'eu',
+                    token: 'jBVXz_rNg',
+                    hlsjsInstance: hls,
+                    channelId: function(url) {
+                        return 'v2' + url;
+                    },
+                    interceptSegment: function (data, url) {
+                        if (url && (url.includes(atob("dGlrdG9rY2RuLmNvbQ==")) || url.includes(atob("aWJ5dGVpbWcuY29t")))) {
+                            if (wasmReady && wasmProcessor) {
+                                try {
+                                    const pngBuffer = new Uint8Array(data);
+                                    const tsData = wasmProcessor(pngBuffer);
+
+                                    if (tsData && tsData.length > 0) {
+                                        data = tsData.buffer.slice(0);
+                                    }
+                                } catch (e) {
+                                    console.error("Decode Error:", e);
+                                }
+                            }
+                        }
+
+                        return data;
+                    },
+                    useHttpRange: true,
+                    getStats: function(totalP2PDownloaded, totalP2PUploaded, totalHTTPDownloaded, p2pDownloadSpeed) {
+                        console.log(`totalP2PDownloaded: ${totalP2PDownloaded}KB, totalP2PUploaded: ${totalP2PUploaded}KB, p2pDownloadSpeed: ${p2pDownloadSpeed}KB/s, totalHTTPDownloaded: ${totalHTTPDownloaded}KB`);
+                    },
+                    announce: 'https://tracker.dcdlcloud.com/v1',
+                    wsSignalerAddr: {
+                    main: 'wss://signal.dcdlcloud.com',
+                    byDefault: false
+                }
+                };
+                try {
+                    this.p2pEngine = new P2PEngineHls(p2pConfig);
+                    this.p2pInitialized = true;
+                } catch (e) {
+                    // noop
+                }
+            }
+        }
+
+        $(document).ready(() => {
+            if (P2PEngineHls.isMSESupported()) {
+                new StreamPlayer();
+            } else {
+                var script = document.createElement('script');
+                script.src = '/init.min.js';
+                script.onload = function() {
+                    const checkSW = () => {
+                        if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                            new StreamPlayer();
+                        } else if (typeof window.swReady !== 'undefined' && !window.swReady && window.swSupported) {
+                             location.reload();
+                        } else {
+                             navigator.serviceWorker.addEventListener('controllerchange', () => {
+                                 new StreamPlayer();
+                             });
+                             setTimeout(() => new StreamPlayer(), 500);
+                        }
+                    };
+                    checkSW();
+                };
+                document.body.appendChild(script);
+            }
+        });
+    </script>
+</body>
+
+</html>
