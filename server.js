@@ -1,48 +1,30 @@
 import express from 'express';
 import axios from 'axios';
 import cors from 'cors';
-import puppeteer from 'puppeteer';
 
 const app = express();
 const PORT = 3001;
 
 app.use(cors());
 
-// ─── Puppeteer Browser Singleton ───
-let browser;
+// ─── In-memory cache ───
 const sofaCache = new Map();
 
-const initBrowser = async () => {
-  try {
-    browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] });
-    console.log('Puppeteer browser started.');
-  } catch (err) {
-    console.error('Puppeteer init failed:', err.message);
-  }
-};
-initBrowser();
-
-// Helper: fetch JSON from Sofascore API via Puppeteer (bypasses Cloudflare)
+// Helper: fetch JSON from Sofascore API via axios (no Puppeteer needed)
 const fetchSofascoreJson = async (apiPath) => {
-  if (!browser) throw new Error('Browser not ready');
-  let page;
-  try {
-    page = await browser.newPage();
-    await page.setRequestInterception(true);
-    page.on('request', (req) => {
-      if (['image', 'stylesheet', 'font'].includes(req.resourceType())) {
-        req.abort();
-      } else {
-        req.continue();
-      }
-    });
-    const url = `https://api.sofascore.com/api/v1/${apiPath}`;
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 15000 });
-    const text = await page.evaluate(() => document.body.innerText);
-    return JSON.parse(text);
-  } finally {
-    if (page) await page.close();
-  }
+  const url = `https://api.sofascore.com/api/v1/${apiPath}`;
+  const { data } = await axios.get(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'application/json',
+      'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Referer': 'https://www.sofascore.com/',
+      'Origin': 'https://www.sofascore.com',
+      'Cache-Control': 'no-cache'
+    },
+    timeout: 10000
+  });
+  return data;
 };
 
 // ─── Sofascore: Search event by name ───
@@ -129,7 +111,6 @@ app.get('/api/sofascore/event/:id/lineups', async (req, res) => {
 // ─── Sofascore: Standings ───
 app.get('/api/sofascore/event/:id/standings', async (req, res) => {
   try {
-    // We need tournament ID + season ID from event first
     const eventData = await fetchSofascoreJson(`event/${req.params.id}`);
     const tournamentId = eventData.event?.tournament?.uniqueTournament?.id;
     const seasonId = eventData.event?.season?.id;
@@ -149,7 +130,6 @@ app.get('/api/player/proxy', async (req, res) => {
   const targetUrl = req.query.targetUrl;
   if (!targetUrl) return res.status(400).send('targetUrl required');
 
-  // Player'a gerekli CORS başlıklarını veriyoruz
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'X-Requested-With');
 
@@ -164,8 +144,6 @@ app.get('/api/player/proxy', async (req, res) => {
 
     const urlObj = new URL(targetUrl);
     const baseUrl = urlObj.origin + urlObj.pathname.substring(0, urlObj.pathname.lastIndexOf('/') + 1);
-    
-    // Base tag yerine mutlak URL injection'ı yapalım ki CORS daha rahat çalışsın
     html = html.replace('<head>', `<head><base href="${baseUrl}">`);
 
     const injectedCode = `
@@ -207,7 +185,6 @@ app.get('/api/player/proxy', async (req, res) => {
             }, '*');
           }
         });
-        // Auto-close any popups/overlays
         setInterval(function() {
           document.querySelectorAll('[data-free-close], [data-overlay-close], [data-text-close]').forEach(function(el) { el.click(); });
           document.querySelectorAll('[data-free-banner], [data-text-overlay], [data-overlay-banner], [data-advertisement], [data-advertisement-link]').forEach(function(el) { el.remove(); });
@@ -254,7 +231,6 @@ app.get('/api/matches', async (req, res) => {
       });
     }
 
-    // Extract base stream URL from one of the player pages
     let baseStreamUrl = '';
     if (matches.length > 0) {
       try {
@@ -271,12 +247,10 @@ app.get('/api/matches', async (req, res) => {
 
     const processedMatches = matches.map(m => {
       let directUrl = '';
-      // Extract ONLY the id param, stop at & or # to avoid hash pollution
       const idMatch = m.url.match(/[?&]id=([^&#]+)/);
       if (idMatch && baseStreamUrl) {
         directUrl = `${baseStreamUrl}${idMatch[1]}/playlist.m3u8`;
       }
-      // Create a URL-safe slug from the match name
       const slug = m.name
         .toLowerCase()
         .replace(/\s*hd\d*$/i, '')
@@ -293,10 +267,12 @@ app.get('/api/matches', async (req, res) => {
   }
 });
 
+// Start local server if not on Vercel
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }
 
+// Export for Vercel Serverless
 export default app;
