@@ -1,6 +1,7 @@
 import express from 'express';
 import axios from 'axios';
 import cors from 'cors';
+import puppeteerCore from 'puppeteer-core';
 
 const app = express();
 const PORT = 3001;
@@ -10,21 +11,79 @@ app.use(cors());
 // ─── In-memory cache ───
 const sofaCache = new Map();
 
-// Helper: fetch JSON from Sofascore API via axios (no Puppeteer needed)
+// ─── Browser Singleton (works on both Vercel and local) ───
+let browser;
+const getBrowser = async () => {
+  if (browser) return browser;
+  
+  if (process.env.VERCEL) {
+    // Vercel serverless: use @sparticuz/chromium
+    const chromium = await import('@sparticuz/chromium');
+    browser = await puppeteerCore.launch({
+      args: chromium.default.args,
+      defaultViewport: chromium.default.defaultViewport,
+      executablePath: await chromium.default.executablePath(),
+      headless: 'new',
+    });
+  } else {
+    // Local dev: use system Chrome or puppeteer's bundled one
+    const possiblePaths = [
+      'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+      'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+      process.env.CHROME_PATH,
+    ].filter(Boolean);
+    
+    let execPath = null;
+    for (const p of possiblePaths) {
+      try {
+        const fs = await import('fs');
+        if (fs.existsSync(p)) { execPath = p; break; }
+      } catch {}
+    }
+    
+    if (!execPath) {
+      // Fallback: try to use puppeteer if installed
+      try {
+        const puppeteer = await import('puppeteer');
+        browser = await puppeteer.default.launch({ headless: 'new', args: ['--no-sandbox'] });
+        console.log('Using bundled Puppeteer browser');
+        return browser;
+      } catch {
+        throw new Error('No Chrome/Chromium found. Install Google Chrome or puppeteer.');
+      }
+    }
+    
+    browser = await puppeteerCore.launch({
+      executablePath: execPath,
+      headless: 'new',
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+  }
+  console.log('Browser started.');
+  return browser;
+};
+
+// Helper: fetch JSON from Sofascore API via headless browser (bypasses Cloudflare)
 const fetchSofascoreJson = async (apiPath) => {
-  const url = `https://api.sofascore.com/api/v1/${apiPath}`;
-  const { data } = await axios.get(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Accept': 'application/json',
-      'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
-      'Referer': 'https://www.sofascore.com/',
-      'Origin': 'https://www.sofascore.com',
-      'Cache-Control': 'no-cache'
-    },
-    timeout: 10000
-  });
-  return data;
+  const b = await getBrowser();
+  let page;
+  try {
+    page = await b.newPage();
+    await page.setRequestInterception(true);
+    page.on('request', (req) => {
+      if (['image', 'stylesheet', 'font'].includes(req.resourceType())) {
+        req.abort();
+      } else {
+        req.continue();
+      }
+    });
+    const url = `https://api.sofascore.com/api/v1/${apiPath}`;
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 15000 });
+    const text = await page.evaluate(() => document.body.innerText);
+    return JSON.parse(text);
+  } finally {
+    if (page) await page.close();
+  }
 };
 
 // ─── Sofascore: Search event by name ───
